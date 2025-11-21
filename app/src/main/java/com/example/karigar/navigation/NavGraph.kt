@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.karigar.ui.auth.LoginSignupScreen
+import com.example.karigar.ui.auth.SignupScreen
 import com.example.karigar.ui.onboarding.OnboardingScreenFirst
 
 @Composable
@@ -29,8 +30,14 @@ fun KarigarNavGraph() {
                     // TODO: navigate to your login screen
                 },
                 onSignupClick = {
-                    // TODO: navigate to your signup screen
+                    navController.navigate("SignUp")
                 }
+            )
+        }
+
+        composable("SignUp") {
+            SignupScreen(
+
             )
         }
     }

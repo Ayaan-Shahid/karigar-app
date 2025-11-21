@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.accompanist.pager.indicators)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.foundation)
 
 
     testImplementation(libs.junit)

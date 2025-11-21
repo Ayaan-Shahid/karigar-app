@@ -105,7 +105,7 @@ fun OnboardingScreenFirst(
                     Icon(
                         imageVector = Icons.Filled.Handyman,
                         contentDescription = "Handyman Icon",
-                        tint = Color(0xFF4CAF50),
+                        tint = primary,
                         modifier = Modifier.size(45.dp)
                     )
                 }

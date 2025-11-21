@@ -40,9 +40,8 @@ fun LoginSignupScreen(
     onLoginClick: () -> Unit = {},
     onSignupClick: () -> Unit = {}
 ) {
-    val brandGreen = Color(0xFFA8D8B9)
+    val primary = Color(0xFF28A745)
     val darkGrey = Color(0xFF333333)
-//    val softGrey = Color(0xFFF5F5F5)
 
     Column(
         modifier = Modifier
@@ -67,7 +66,7 @@ fun LoginSignupScreen(
                 Icon(
                     imageVector = Icons.Filled.Handyman,
                     contentDescription = "Handyman Icon",
-                    tint = Color(0xFF4CAF50),
+                    tint = primary,
                     modifier = Modifier.size(45.dp)
                 )
             }
@@ -117,8 +116,8 @@ fun LoginSignupScreen(
                     .height(56.dp),
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = brandGreen,
-                    contentColor = darkGrey
+                    containerColor = primary,
+                    contentColor = Color.White
                 )
             ) {
                 Text("Login", fontSize = 18.sp, fontWeight = FontWeight.Bold)
