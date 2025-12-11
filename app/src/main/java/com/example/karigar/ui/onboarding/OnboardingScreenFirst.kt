@@ -79,7 +79,11 @@ fun OnboardingScreenFirst(
         )
     )
 
-    val pagerState = rememberPagerState(initialPage = 0) { onboardingItems.size }
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        pageCount = { onboardingItems.size }
+    )
+
     val scope = rememberCoroutineScope()
 
     Scaffold(containerColor = bgColor) { padding ->

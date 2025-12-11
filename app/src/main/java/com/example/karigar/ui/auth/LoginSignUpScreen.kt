@@ -34,7 +34,6 @@ import coil.compose.AsyncImage
 import com.example.karigar.R
 
 
-@Preview
 @Composable
 fun LoginSignupScreen(
     onLoginClick: () -> Unit = {},
@@ -147,3 +146,10 @@ fun LoginSignupScreen(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun LoginSignupScreenPreview() {
+    LoginSignupScreen()
+}
+
