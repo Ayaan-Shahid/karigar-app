@@ -238,7 +238,7 @@ fun SelectServiceScreen(
                 contentPadding = PaddingValues(bottom = 16.dp)
             ) {
                 items(services.filter {
-                    it.name.contains(
+                    it.name.startsWith(
                         searchQuery,
                         ignoreCase = true
                     )
