@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -42,6 +43,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -56,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.karigar.ui.components.AiChatBottomSheet // Ensure this import exists
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -63,6 +66,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun CustomerDashboardScreen(
@@ -77,6 +81,10 @@ fun CustomerDashboardScreen(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(islamabad, 12f)
     }
+
+    // --- AI Chat State ---
+    var showChatSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
     Scaffold(
         bottomBar = {
@@ -94,11 +102,11 @@ fun CustomerDashboardScreen(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState
                 ) {
-                    // Technician Pins (Simulated from HTML absolute positions)
+                    // Technician Pins
                     Marker(
                         state = MarkerState(position = LatLng(33.69, 73.05)),
                         title = "Electrician",
-                        icon = null // You can set custom bitmaps here later
+                        icon = null
                     )
                     Marker(
                         state = MarkerState(position = LatLng(33.67, 73.03)),
@@ -189,7 +197,7 @@ fun CustomerDashboardScreen(
                         item { FilterChip(text = "All", icon = Icons.Default.Tune, selected = true) }
                         item { FilterChip(text = "Electrician", icon = Icons.Default.Bolt, selected = false) }
                         item { FilterChip(text = "Plumber", icon = Icons.Default.Plumbing, selected = false) }
-                        item { FilterChip(text = "Urgent", icon = Icons.Default.Construction, selected = false) } // Using construction as placeholder
+                        item { FilterChip(text = "Urgent", icon = Icons.Default.Construction, selected = false) }
                     }
                 }
 
@@ -224,7 +232,9 @@ fun CustomerDashboardScreen(
                         shape = CircleShape,
                         color = cardLight,
                         shadowElevation = 6.dp,
-                        modifier = Modifier.size(56.dp).clickable { /* TODO: AI Chat */ }
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clickable { showChatSheet = true } // CLICK ACTION ADDED
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
@@ -235,6 +245,14 @@ fun CustomerDashboardScreen(
                             )
                         }
                     }
+                }
+
+                // 4. AI CHAT BOTTOM SHEET
+                if (showChatSheet) {
+                    AiChatBottomSheet(
+                        onDismiss = { showChatSheet = false },
+                        sheetState = sheetState
+                    )
                 }
             }
         }
