@@ -65,6 +65,9 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(platform(libs.kotlin.bom))
     implementation(libs.kotlin.stdlib)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.coil.compose) // For displaying images
+    implementation(libs.androidx.activity.compose.v193) // For the photo picker
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

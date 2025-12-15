@@ -1,5 +1,6 @@
 [versions]
 accompanistPager = "0.36.0"
+activityComposeVersion = "1.9.3"
 agp = "8.12.3"
 coilCompose = "2.7.0"
 foundationVersion = "1.5.0"
@@ -19,10 +20,12 @@ foundation = "1.9.4"
 navigationCompose = "2.9.6"
 androidxFoundation = "1.9.5"
 playServicesMaps = "19.2.0"
+lifecycle = "2.8.7"
 
 [libraries]
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
 accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanistPager" }
+androidx-activity-compose-v193 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-foundation-v150 = { module = "androidx.compose.foundation:foundation", version.ref = "foundationVersion" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -49,6 +52,7 @@ kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
+androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
