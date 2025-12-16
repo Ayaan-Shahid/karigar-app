@@ -1,4 +1,4 @@
-package com.example.karigar.ui.customer
+package com.example.karigar.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

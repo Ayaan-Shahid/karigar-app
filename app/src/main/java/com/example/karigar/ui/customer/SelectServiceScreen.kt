@@ -50,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.karigar.ui.components.PostRequestLayout
+import com.example.karigar.ui.viewmodel.PostRequestViewModel
 
 // Data model
 data class ServiceCategory(val name: String, val icon: ImageVector)

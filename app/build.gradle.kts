@@ -1,3 +1,4 @@
+import java.util.Properties
 
 
 plugins {
@@ -19,6 +20,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val keystoreFile = project.rootProject.file("local.properties")
+        val properties = Properties()
+        if (keystoreFile.exists()) {
+            properties.load(keystoreFile.inputStream())
+        }
+        val mapsApiKey = properties.getProperty("MAPS_API_KEY") ?: ""
+
+        // 2. Pass it to the Android Manifest
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+
+        // 3. (Optional) Pass it to your Kotlin Code (BuildConfig)
+        buildConfigField("String", "MAPS_API_KEY", "\"$mapsApiKey\"")
     }
 
     buildTypes {
@@ -38,6 +52,7 @@ android {
         jvmTarget = "11"
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }

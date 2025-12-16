@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage // Requires coil-compose dependency
 import com.example.karigar.ui.components.PostRequestLayout
+import com.example.karigar.ui.viewmodel.PostRequestViewModel
 
 // 1. STATEFUL Composable
 @Composable

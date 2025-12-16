@@ -16,8 +16,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,11 +29,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.karigar.ui.components.PostRequestLayout
+import com.example.karigar.ui.viewmodel.PostRequestViewModel
 
 // 1. STATEFUL Composable (Used in NavGraph)
 @Composable
@@ -117,21 +115,21 @@ fun SetPriceContent(
             Spacer(modifier = Modifier.height(24.dp))
 
             // AI Suggestion
-            Card(
-                colors = CardDefaults.cardColors(containerColor = primaryColor.copy(alpha = 0.1f)),
-                border = androidx.compose.foundation.BorderStroke(1.dp, primaryColor.copy(alpha = 0.3f)),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("AI SUGGESTION", color = primaryColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                    Text("Market rate is around PKR 1,200 - 1,500", fontWeight = FontWeight.Medium, modifier = Modifier.padding(vertical = 4.dp))
-                    Text("This is a starting offer. You can negotiate later.", fontSize = 12.sp, color = Color.Gray, textAlign = TextAlign.Center)
-                }
-            }
+//            Card(
+//                colors = CardDefaults.cardColors(containerColor = primaryColor.copy(alpha = 0.1f)),
+//                border = androidx.compose.foundation.BorderStroke(1.dp, primaryColor.copy(alpha = 0.3f)),
+//                shape = RoundedCornerShape(12.dp),
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                Column(
+//                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Text("AI SUGGESTION", color = primaryColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+//                    Text("Market rate is around PKR 1,200 - 1,500", fontWeight = FontWeight.Medium, modifier = Modifier.padding(vertical = 4.dp))
+//                    Text("This is a starting offer. You can negotiate later.", fontSize = 12.sp, color = Color.Gray, textAlign = TextAlign.Center)
+//                }
+//            }
         }
     }
 }

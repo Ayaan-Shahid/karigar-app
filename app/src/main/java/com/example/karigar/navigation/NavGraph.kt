@@ -16,11 +16,11 @@ import com.example.karigar.ui.auth.UserRole
 import com.example.karigar.ui.customer.ConfirmLocationScreen
 import com.example.karigar.ui.customer.CustomerDashboardScreen
 import com.example.karigar.ui.customer.DescribeIssueScreen
-import com.example.karigar.ui.customer.PostRequestViewModel
 import com.example.karigar.ui.customer.ReviewConfirmScreen
 import com.example.karigar.ui.customer.SelectServiceScreen
 import com.example.karigar.ui.customer.SetPriceScreen
 import com.example.karigar.ui.onboarding.OnboardingScreenFirst
+import com.example.karigar.ui.viewmodel.PostRequestViewModel
 
 @Composable
 fun KarigarNavGraph() {
@@ -30,19 +30,47 @@ fun KarigarNavGraph() {
         navController = navController,
         startDestination = "onboarding",
         // Optional: Smooth Animations for the whole app
-        enterTransition = { slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(400)) },
-        exitTransition = { slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(400)) },
-        popEnterTransition = { slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(400)) },
-        popExitTransition = { slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(400)) }
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { 1000 },
+                animationSpec = tween(400)
+            )
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { -1000 },
+                animationSpec = tween(400)
+            )
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -1000 },
+                animationSpec = tween(400)
+            )
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { 1000 },
+                animationSpec = tween(400)
+            )
+        }
     ) {
 
         composable("onboarding") {
             OnboardingScreenFirst(
                 onContinueToLogin = {
-                    navController.navigate("loginSignup") { popUpTo("onboarding") { inclusive = true } }
+                    navController.navigate("loginSignup") {
+                        popUpTo("onboarding") {
+                            inclusive = true
+                        }
+                    }
                 },
                 onSkipToLogin = {
-                    navController.navigate("loginSignup") { popUpTo("onboarding") { inclusive = true } }
+                    navController.navigate("loginSignup") {
+                        popUpTo("onboarding") {
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }
@@ -81,31 +109,32 @@ fun KarigarNavGraph() {
             )
         }
 
-        // 2. Post Request Wizard Flow (Nested Graph)
         navigation(startDestination = "SelectService", route = "PostRequestFlow") {
 
-            // Helper to share ViewModel across all screens in this flow
+            // 🟢 FIXED HELPER: Now requires the child 'entry' to act as a stable key
             @Composable
-            fun getSharedViewModel(navController: androidx.navigation.NavController): PostRequestViewModel {
-                val navBackStackEntry = remember(navController.currentBackStackEntry) {
+            fun getSharedViewModel(entry: androidx.navigation.NavBackStackEntry): PostRequestViewModel {
+                val parentEntry = remember(entry) {
                     navController.getBackStackEntry("PostRequestFlow")
                 }
-                return viewModel(navBackStackEntry)
+                return viewModel(parentEntry)
             }
 
             // Step 1
-            composable("SelectService") {
-                val vm = getSharedViewModel(navController)
+            composable("SelectService") { entry -> // <--- Get 'entry' here
+                val vm = getSharedViewModel(entry) // <--- Pass 'entry' here
                 SelectServiceScreen(
                     viewModel = vm,
-                    onBackClick = { navController.popBackStack("CustomerDashboard", inclusive = false) },
+                    onBackClick = { navController.popBackStack() },
+                    // 🔴 Your code had popBackStack() here, which is wrong for "Next".
+                    // 🟢 Fixed: It should navigate to the next screen.
                     onNextClick = { navController.navigate("DescribeIssue") }
                 )
             }
 
             // Step 2
-            composable("DescribeIssue") {
-                val vm = getSharedViewModel(navController)
+            composable("DescribeIssue") { entry ->
+                val vm = getSharedViewModel(entry)
                 DescribeIssueScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
@@ -114,8 +143,8 @@ fun KarigarNavGraph() {
             }
 
             // Step 3
-            composable("SetPrice") {
-                val vm = getSharedViewModel(navController)
+            composable("SetPrice") { entry ->
+                val vm = getSharedViewModel(entry)
                 SetPriceScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
@@ -124,8 +153,8 @@ fun KarigarNavGraph() {
             }
 
             // Step 4
-            composable("ConfirmLocation") {
-                val vm = getSharedViewModel(navController)
+            composable("ConfirmLocation") { entry ->
+                val vm = getSharedViewModel(entry)
                 ConfirmLocationScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
@@ -134,16 +163,13 @@ fun KarigarNavGraph() {
             }
 
             // Step 5
-            composable("ReviewConfirm") {
-                val vm = getSharedViewModel(navController)
+            composable("ReviewConfirm") { entry ->
+                val vm = getSharedViewModel(entry)
                 ReviewConfirmScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
                     onSubmitClick = {
-                        // Submit Logic here...
                         println("Request Submitted!")
-
-                        // Navigate back to Dashboard and clear the wizard history
                         navController.navigate("CustomerDashboard") {
                             popUpTo("CustomerDashboard") { inclusive = true }
                         }

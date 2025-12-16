@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.karigar.ui.components.PostRequestLayout
+import com.example.karigar.ui.viewmodel.PostRequestViewModel
 
 // 1. STATEFUL Composable
 @Composable

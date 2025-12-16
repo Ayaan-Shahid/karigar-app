@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,16 +30,12 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetState
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,9 +52,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.karigar.ui.viewmodel.ChatMessage
 import com.example.karigar.ui.viewmodel.ChatViewModel
 
-// ---------------------------------------------------------
-// 1. The "Smart" Component (Handles Logic & ViewModel)
-// ---------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiChatBottomSheet(
@@ -80,21 +72,16 @@ fun AiChatBottomSheet(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
-        Box(modifier = Modifier.fillMaxHeight(0.9f)) {
-            // Pass state down to the UI
-            AiChatContent(
-                messages = messages,
-                isLoading = isLoading,
-                onSendMessage = { viewModel.sendMessage(it) },
-                onDismiss = onDismiss
-            )
-        }
+        // Pass state down to the UI
+        AiChatContent(
+            messages = messages,
+            isLoading = isLoading,
+            onSendMessage = { viewModel.sendMessage(it) },
+            onDismiss = onDismiss
+        )
     }
 }
 
-// ---------------------------------------------------------
-// 2. The "Dumb" UI Component (Stateless - Perfect for Previews)
-// ---------------------------------------------------------
 @Composable
 fun AiChatContent(
     messages: List<ChatMessage>,
@@ -103,185 +90,119 @@ fun AiChatContent(
     onDismiss: () -> Unit
 ) {
     val primaryColor = Color(0xFF4CAF50)
-    val listState = rememberLazyListState()
+    // FIX 3: 'by' keyword now works because of runtime.* imports
     var inputText by remember { mutableStateOf("") }
 
-    // Auto-scroll to bottom
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
-        }
-    }
-
-    Scaffold(
-        containerColor = Color.White,
-        topBar = {
-            Column {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            color = primaryColor.copy(alpha = 0.1f),
-                            shape = CircleShape,
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    Icons.Filled.SmartToy,
-                                    null,
-                                    tint = primaryColor,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                "Karigar Assistant",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .background(if (isLoading) Color(0xFFFFC107) else primaryColor, CircleShape)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    if (isLoading) "Typing..." else "Online",
-                                    color = if (isLoading) Color(0xFFFFC107) else primaryColor,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Filled.Close, "Close", tint = Color.Gray)
-                    }
-                }
-                HorizontalDivider(color = Color(0xFFF0F0F0), thickness = 1.dp)
-            }
-        },
-        bottomBar = {
-            Surface(
-                shadowElevation = 12.dp,
-                color = Color.White,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .imePadding()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .background(Color(0xFFF5F5F5), RoundedCornerShape(24.dp))
-                        .padding(horizontal = 4.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        placeholder = { Text("Ask something...", color = Color.Gray) },
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = primaryColor
-                        ),
-                        modifier = Modifier.weight(1f),
-                        enabled = !isLoading
-                    )
-
-                    IconButton(
-                        onClick = {
-                            if (inputText.isNotBlank()) {
-                                onSendMessage(inputText)
-                                inputText = ""
-                            }
-                        },
-                        enabled = !isLoading && inputText.isNotBlank(),
-                        modifier = Modifier
-                            .padding(end = 4.dp)
-                            .background(
-                                if (!isLoading && inputText.isNotBlank()) primaryColor else Color.LightGray,
-                                CircleShape
-                            )
-                            .size(40.dp)
-                    ) {
-                        if (isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                color = Color.White,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                Icons.AutoMirrored.Filled.Send,
-                                "Send",
-                                tint = Color.White,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxHeight(0.9f)
+            .fillMaxWidth()
+            .imePadding()
+            .navigationBarsPadding()
+    ) {
+        // --- HEADER ---
+        Row(
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(messages) { msg ->
-                    ChatBubble(message = msg, primaryColor = primaryColor)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    color = primaryColor.copy(alpha = 0.1f),
+                    shape = CircleShape,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Filled.SmartToy, null, tint = primaryColor, modifier = Modifier.size(24.dp))
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text("Karigar Assistant", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.size(8.dp).background(if (isLoading) Color(0xFFFFC107) else primaryColor, CircleShape))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (isLoading) "Typing..." else "Online", color = if (isLoading) Color(0xFFFFC107) else primaryColor, fontSize = 12.sp)
+                    }
                 }
             }
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.Filled.Close, "Close", tint = Color.Gray)
+            }
+        }
+        HorizontalDivider(color = Color(0xFFF0F0F0), thickness = 1.dp)
 
-            if (messages.isEmpty()) {
-                Row(
+        // --- CHAT LIST ---
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            reverseLayout = true
+        ) {
+            // FIX 4: .reversed() creates a new List, so 'items' works correctly now with the import above
+            items(messages.reversed()) { msg ->
+                ChatBubble(message = msg, primaryColor = primaryColor)
+            }
+        }
+
+        // --- INPUT AREA ---
+        Surface(
+            shadowElevation = 8.dp,
+            color = Color.White,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .background(Color(0xFFF5F5F5), RoundedCornerShape(24.dp))
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextField(
+                    value = inputText,
+                    onValueChange = { inputText = it },
+                    placeholder = { Text("Ask something...", color = Color.Gray) },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = primaryColor
+                    ),
+                    modifier = Modifier.weight(1f),
+                    enabled = !isLoading
+                )
+
+                IconButton(
+                    onClick = {
+                        if (inputText.isNotBlank()) {
+                            onSendMessage(inputText)
+                            inputText = ""
+                        }
+                    },
+                    enabled = !isLoading && inputText.isNotBlank(),
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(end = 4.dp)
+                        .background(if (!isLoading && inputText.isNotBlank()) primaryColor else Color.LightGray, CircleShape)
+                        .size(40.dp)
                 ) {
-                    SuggestionChip(
-                        onClick = { onSendMessage("I need an electrician") },
-                        label = { Text("Electrician") },
-                        colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFFF5F5F5)),
-                        border = null
-                    )
-                    SuggestionChip(
-                        onClick = { onSendMessage("How much for AC repair?") },
-                        label = { Text("Check Rates") },
-                        colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFFF5F5F5)),
-                        border = null
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                    } else {
+                        Icon(Icons.AutoMirrored.Filled.Send, "Send", tint = Color.White, modifier = Modifier.size(20.dp))
+                    }
                 }
             }
         }
     }
 }
 
-// ---------------------------------------------------------
-// 3. Helper Components
-// ---------------------------------------------------------
+// FIX 5: Added ChatBubble helper so it is not "Unresolved"
 @Composable
 fun ChatBubble(message: ChatMessage, primaryColor: Color) {
     val align = if (message.isUser) Alignment.End else Alignment.Start
@@ -305,23 +226,22 @@ fun ChatBubble(message: ChatMessage, primaryColor: Color) {
     }
 }
 
-// ---------------------------------------------------------
-// 4. The Preview (Uses 'Dumb' Component with Fake Data)
-// ---------------------------------------------------------
+// FIX 6: Added Preview
 @Preview(showBackground = true)
 @Composable
 fun AiChatPreview() {
     val fakeMessages = listOf(
-        ChatMessage("Hello! How can I help you today?", isUser = false),
-        ChatMessage("I need to fix my AC.", isUser = true),
-        ChatMessage("Sure! I can help you find a technician.", isUser = false)
+        ChatMessage("How can I post a job?", isUser = true),
+        ChatMessage("Tap on the 'Post Job' button on the dashboard.", isUser = false)
     )
 
-    // We pass the fake messages directly to the UI
+    // Note: In reverseLayout, the LAST item in the list appears at the BOTTOM.
+    // So "Post Job" (User) will be above "Tap on..." (AI).
+
     AiChatContent(
         messages = fakeMessages,
         isLoading = false,
-        onSendMessage = {}, // Do nothing on send
+        onSendMessage = {},
         onDismiss = {}
     )
 }
