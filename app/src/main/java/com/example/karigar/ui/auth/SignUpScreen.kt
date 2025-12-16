@@ -60,6 +60,8 @@ fun SignupScreen(
     // Version 1.2.0 uses a State object to handle text and validation
     val pickerState = rememberKomposeCountryCodePickerState("PK")
 
+    // NEW: Local state to hold the raw input (prevents cursor jumping)
+    var rawInput by remember { mutableStateOf("") }
 
     val primary = Color(0xFF28A745)
     val textDark = Color(0xFF212121)
@@ -182,10 +184,16 @@ fun SignupScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
-                            state = pickerState, // Pass the state!
-                            text = pickerState.phoneNumber,
-                            onValueChange = {
-                                pickerState.phoneNumber = it
+                            state = pickerState,
+
+                            // FIX APPLIED HERE:
+                            // 1. Bind UI to local 'rawInput' so you see what you type immediately
+                            text = rawInput,
+
+                            // 2. Update both local variable (for UI) and library state (for validation)
+                            onValueChange = { input ->
+                                rawInput = input
+                                pickerState.phoneNumber = input
                             },
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -194,7 +202,6 @@ fun SignupScreen(
 
                         Button(
                             onClick = { currentStep = SignupStep.OTP_VERIFICATION },
-                            // 1.2.0 uses 'isPhoneNumberValid' property directly
                             enabled = pickerState.isPhoneNumberValid(),
                             modifier = Modifier
                                 .fillMaxWidth()

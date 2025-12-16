@@ -105,7 +105,7 @@ fun OtpScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            "We've sent a code to +92 $phoneNumber",
+            "We've sent a code to $phoneNumber",
             fontSize = 15.sp,
             color = subtle,
             textAlign = TextAlign.Center
