@@ -1,14 +1,17 @@
 package com.example.karigar.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding // <--- IMPORT THIS
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -29,21 +32,21 @@ import androidx.compose.ui.unit.sp
 fun PostRequestLayout(
     title: String,
     currentStep: Int,
-    totalSteps: Int = 5, // Updated to 5 steps
+    totalSteps: Int = 5,
     onBackClick: () -> Unit,
     bottomBar: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val primaryColor = Color(0xFF4CAF50)
     val backgroundLight = Color(0xFFF7F9F9)
     val textDark = Color(0xFF102210)
-    val textSecondary = Color(0xFF828282)
-    val borderLight = Color(0xFFE0E0E0)
 
     Scaffold(
         containerColor = backgroundLight,
         topBar = {
-            Column(modifier = Modifier.background(backgroundLight)) {
+            Column(modifier = Modifier
+                .background(backgroundLight)
+                .statusBarsPadding()
+            ) {
                 // Top Bar
                 Row(
                     modifier = Modifier
@@ -65,42 +68,19 @@ fun PostRequestLayout(
                     Spacer(modifier = Modifier.size(40.dp)) // Balance
                 }
 
-                // Progress Indicators
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-//                    Text(
-//                        text = "Step $currentStep of $totalSteps",
-//                        fontSize = 12.sp,
-//                        color = textSecondary,
-//                        fontWeight = FontWeight.Medium,
-//                        modifier = Modifier.padding(bottom = 8.dp)
-//                    )
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-//                    ) {
-//                        for (i in 1..totalSteps) {
-//                            val isCompleted = i <= currentStep
-//                            val color = if (isCompleted) primaryColor else borderLight
-//
-//                            // Simple animation for the bar fill
-//                            val height by animateDpAsState(targetValue = 4.dp, label = "barHeight")
-//
-//                            Box(
-//                                modifier = Modifier
-//                                    .weight(1f)
-//                                    .height(height)
-//                                    .clip(CircleShape)
-//                                    .background(color)
-//                            )
-//                        }
-//                    }
-                }
+                // (Progress indicators commented out in your code)
             }
         },
-        bottomBar = bottomBar
+        // --- BOTTOM BAR FIX ---
+        bottomBar = {
+            Box(
+                modifier = Modifier
+                    .background(backgroundLight) // Match background color
+                    .navigationBarsPadding()     // Pushes content up above system nav bar
+            ) {
+                bottomBar()
+            }
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -122,7 +102,6 @@ fun PostRequestLayoutPreview() {
         totalSteps = 5,
         onBackClick = {},
         content = {
-            // Dummy content to visualize the layout
             androidx.compose.material3.Text(
                 text = "This is where the screen content goes.",
                 modifier = Modifier.padding(top = 16.dp)

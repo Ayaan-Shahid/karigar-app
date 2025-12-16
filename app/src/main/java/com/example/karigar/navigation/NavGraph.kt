@@ -4,6 +4,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -29,48 +30,27 @@ fun KarigarNavGraph() {
     NavHost(
         navController = navController,
         startDestination = "onboarding",
-        // Optional: Smooth Animations for the whole app
         enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { 1000 },
-                animationSpec = tween(400)
-            )
+            slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(400))
         },
         exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { -1000 },
-                animationSpec = tween(400)
-            )
+            slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(400))
         },
         popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { -1000 },
-                animationSpec = tween(400)
-            )
+            slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(400))
         },
         popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { 1000 },
-                animationSpec = tween(400)
-            )
+            slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(400))
         }
     ) {
 
         composable("onboarding") {
             OnboardingScreenFirst(
                 onContinueToLogin = {
-                    navController.navigate("loginSignup") {
-                        popUpTo("onboarding") {
-                            inclusive = true
-                        }
-                    }
+                    navController.navigate("loginSignup") { popUpTo("onboarding") { inclusive = true } }
                 },
                 onSkipToLogin = {
-                    navController.navigate("loginSignup") {
-                        popUpTo("onboarding") {
-                            inclusive = true
-                        }
-                    }
+                    navController.navigate("loginSignup") { popUpTo("onboarding") { inclusive = true } }
                 }
             )
         }
@@ -85,89 +65,117 @@ fun KarigarNavGraph() {
         composable("SignUp") {
             SignupScreen(
                 onVerificationSuccess = { roleName: String, phone: String ->
-                    val role = try {
-                        UserRole.valueOf(roleName)
-                    } catch (e: Exception) {
-                        UserRole.CUSTOMER
-                    }
+                    val role = try { UserRole.valueOf(roleName) } catch (e: Exception) { UserRole.CUSTOMER }
                     println("Signup Success: $role with $phone")
-                    // Navigate to Dashboard on success
-                    navController.navigate("CustomerDashboard") {
-                        popUpTo("loginSignup") { inclusive = true }
-                    }
+                    navController.navigate("CustomerDashboard") { popUpTo("loginSignup") { inclusive = true } }
                 }
             )
         }
 
-        // 1. Dashboard Route
         composable("CustomerDashboard") {
             CustomerDashboardScreen(
-                onPostRequestClick = {
-                    // Navigate to the START of the wizard flow
-                    navController.navigate("PostRequestFlow")
-                }
+                onPostRequestClick = { navController.navigate("PostRequestFlow") }
             )
         }
 
         navigation(startDestination = "SelectService", route = "PostRequestFlow") {
 
-            // 🟢 FIXED HELPER: Now requires the child 'entry' to act as a stable key
             @Composable
             fun getSharedViewModel(entry: androidx.navigation.NavBackStackEntry): PostRequestViewModel {
-                val parentEntry = remember(entry) {
-                    navController.getBackStackEntry("PostRequestFlow")
-                }
+                val parentEntry = remember(entry) { navController.getBackStackEntry("PostRequestFlow") }
                 return viewModel(parentEntry)
             }
 
-            // Step 1
-            composable("SelectService") { entry -> // <--- Get 'entry' here
-                val vm = getSharedViewModel(entry) // <--- Pass 'entry' here
+            // Step 1: Select Service
+            composable("SelectService") { entry ->
+                val vm = getSharedViewModel(entry)
                 SelectServiceScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
-                    // 🔴 Your code had popBackStack() here, which is wrong for "Next".
-                    // 🟢 Fixed: It should navigate to the next screen.
-                    onNextClick = { navController.navigate("DescribeIssue") }
+                    onNextClick = {
+                        // Always go to DescribeIssue (Linear flow for editing 1 & 2)
+                        navController.navigate("DescribeIssue")
+                    }
                 )
             }
 
-            // Step 2
+            // Step 2: Describe Issue
             composable("DescribeIssue") { entry ->
                 val vm = getSharedViewModel(entry)
+                val state = vm.uiState.collectAsState().value
                 DescribeIssueScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
-                    onNextClick = { navController.navigate("SetPrice") }
+                    onNextClick = {
+                        // If Editing, done -> Review. If new flow -> SetPrice
+                        if (state.isEditMode) {
+                            navController.navigate("ReviewConfirm")
+                        } else {
+                            navController.navigate("SetPrice")
+                        }
+                    }
                 )
             }
 
-            // Step 3
+            // Step 3: Set Price
             composable("SetPrice") { entry ->
                 val vm = getSharedViewModel(entry)
+                val state = vm.uiState.collectAsState().value
                 SetPriceScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
-                    onNextClick = { navController.navigate("ConfirmLocation") }
+                    onNextClick = {
+                        // If Editing, done -> Review. If new flow -> Location
+                        if (state.isEditMode) {
+                            navController.navigate("ReviewConfirm")
+                        } else {
+                            navController.navigate("ConfirmLocation")
+                        }
+                    }
                 )
             }
 
-            // Step 4
+            // Step 4: Confirm Location
             composable("ConfirmLocation") { entry ->
                 val vm = getSharedViewModel(entry)
                 ConfirmLocationScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
-                    onNextClick = { navController.navigate("ReviewConfirm") }
+                    onNextClick = {
+                        // Always go to Review (Last step)
+                        navController.navigate("ReviewConfirm")
+                    }
                 )
             }
 
-            // Step 5
+            // Step 5: Review & Confirm
             composable("ReviewConfirm") { entry ->
                 val vm = getSharedViewModel(entry)
+
                 ReviewConfirmScreen(
                     viewModel = vm,
                     onBackClick = { navController.popBackStack() },
+
+                    // 🟢 UPDATED: Use 'navigate' instead of 'popBackStack' for robustness
+
+                    // Edit Service: Go to Step 1 (SelectService)
+                    onEditService = {
+                        vm.setEditMode(true)
+                        navController.navigate("SelectService")
+                    },
+
+                    // Edit Location: Go to Step 4 (ConfirmLocation)
+                    onEditLocation = {
+                        vm.setEditMode(true)
+                        navController.navigate("ConfirmLocation")
+                    },
+
+                    // Edit Price: Go to Step 3 (SetPrice)
+                    onEditPrice = {
+                        vm.setEditMode(true)
+                        navController.navigate("SetPrice")
+                    },
+
                     onSubmitClick = {
                         println("Request Submitted!")
                         navController.navigate("CustomerDashboard") {
