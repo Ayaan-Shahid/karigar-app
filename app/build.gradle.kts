@@ -68,6 +68,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.coil.compose) // For displaying images
     implementation(libs.androidx.activity.compose.v193) // For the photo picker
+    // Retrofit (The Networking Library) - Updated to 2024 version
+    implementation(libs.retrofit)
+
+    // GSON Converter (To translate JSON into Kotlin)
+    implementation(libs.converter.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

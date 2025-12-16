@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,6 +42,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,20 +54,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.karigar.ui.viewmodel.ChatMessage
+import com.example.karigar.ui.viewmodel.ChatViewModel
 
-// Data class
-data class ChatMessage(
-    val text: String,
-    val isUser: Boolean,
-    val timestamp: String = "Just now"
-)
-
+// ---------------------------------------------------------
+// 1. The "Smart" Component (Handles Logic & ViewModel)
+// ---------------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiChatBottomSheet(
     onDismiss: () -> Unit,
-    sheetState: SheetState
+    sheetState: SheetState,
+    viewModel: ChatViewModel = viewModel()
 ) {
+    // Collect real data from ViewModel
+    val messages by viewModel.messages.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
@@ -74,33 +80,39 @@ fun AiChatBottomSheet(
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = { BottomSheetDefaults.DragHandle() }
     ) {
-        // Force the sheet to be tall (90% of screen height)
         Box(modifier = Modifier.fillMaxHeight(0.9f)) {
-            AiChatContent(onDismiss = onDismiss)
+            // Pass state down to the UI
+            AiChatContent(
+                messages = messages,
+                isLoading = isLoading,
+                onSendMessage = { viewModel.sendMessage(it) },
+                onDismiss = onDismiss
+            )
         }
     }
 }
 
+// ---------------------------------------------------------
+// 2. The "Dumb" UI Component (Stateless - Perfect for Previews)
+// ---------------------------------------------------------
 @Composable
 fun AiChatContent(
+    messages: List<ChatMessage>,
+    isLoading: Boolean,
+    onSendMessage: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val primaryColor = Color(0xFF4CAF50)
     val listState = rememberLazyListState()
-
-    var messages by remember { mutableStateOf(listOf(
-        ChatMessage("Hi! I'm Karigar AI. How can I help you find a technician today?", false),
-    )) }
     var inputText by remember { mutableStateOf("") }
 
-    // Auto-scroll to bottom on new message
+    // Auto-scroll to bottom
     LaunchedEffect(messages.size) {
-        listState.animateScrollToItem(messages.size - 1)
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
+        }
     }
 
-    // REAL WORLD FIX: Use Scaffold inside the Sheet.
-    // Scaffold allows us to define a TopBar and BottomBar (Input) that are fixed,
-    // while the content (LazyColumn) scrolls in the middle.
     Scaffold(
         containerColor = Color.White,
         topBar = {
@@ -119,13 +131,35 @@ fun AiChatContent(
                             modifier = Modifier.size(40.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Filled.SmartToy, null, tint = primaryColor, modifier = Modifier.size(24.dp))
+                                Icon(
+                                    Icons.Filled.SmartToy,
+                                    null,
+                                    tint = primaryColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
-                            Text("Karigar Assistant", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                            Text("Online", color = primaryColor, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                            Text(
+                                "Karigar Assistant",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(if (isLoading) Color(0xFFFFC107) else primaryColor, CircleShape)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    if (isLoading) "Typing..." else "Online",
+                                    color = if (isLoading) Color(0xFFFFC107) else primaryColor,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
                         }
                     }
                     IconButton(onClick = onDismiss) {
@@ -136,15 +170,13 @@ fun AiChatContent(
             }
         },
         bottomBar = {
-            // INPUT AREA: Pinned to bottom automatically by Scaffold
             Surface(
                 shadowElevation = 12.dp,
                 color = Color.White,
                 modifier = Modifier
                     .fillMaxWidth()
-                    // KEY FIXES:
-                    .navigationBarsPadding() // Pushes up above system nav bar
-                    .imePadding()            // Pushes up above keyboard
+                    .navigationBarsPadding()
+                    .imePadding()
             ) {
                 Row(
                     modifier = Modifier
@@ -164,39 +196,50 @@ fun AiChatContent(
                             unfocusedIndicatorColor = Color.Transparent,
                             cursorColor = primaryColor
                         ),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        enabled = !isLoading
                     )
 
                     IconButton(
                         onClick = {
                             if (inputText.isNotBlank()) {
-                                messages = messages + ChatMessage(inputText, true)
+                                onSendMessage(inputText)
                                 inputText = ""
                             }
                         },
+                        enabled = !isLoading && inputText.isNotBlank(),
                         modifier = Modifier
                             .padding(end = 4.dp)
-                            .background(primaryColor, CircleShape)
+                            .background(
+                                if (!isLoading && inputText.isNotBlank()) primaryColor else Color.LightGray,
+                                CircleShape
+                            )
                             .size(40.dp)
                     ) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.Send,
-                            "Send",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Send,
+                                "Send",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
         }
     ) { innerPadding ->
-        // CONTENT AREA: Respects top/bottom bars automatically via innerPadding
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // Chat List
             LazyColumn(
                 state = listState,
                 modifier = Modifier
@@ -211,8 +254,7 @@ fun AiChatContent(
                 }
             }
 
-            // Suggestions (Only visible when chat is empty/new)
-            if (messages.size == 1) {
+            if (messages.isEmpty()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -220,13 +262,13 @@ fun AiChatContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     SuggestionChip(
-                        onClick = { messages = messages + ChatMessage("Find an Electrician", true) },
-                        label = { Text("Find Electrician") },
+                        onClick = { onSendMessage("I need an electrician") },
+                        label = { Text("Electrician") },
                         colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFFF5F5F5)),
                         border = null
                     )
                     SuggestionChip(
-                        onClick = { messages = messages + ChatMessage("Check Rates", true) },
+                        onClick = { onSendMessage("How much for AC repair?") },
                         label = { Text("Check Rates") },
                         colors = SuggestionChipDefaults.suggestionChipColors(containerColor = Color(0xFFF5F5F5)),
                         border = null
@@ -237,6 +279,9 @@ fun AiChatContent(
     }
 }
 
+// ---------------------------------------------------------
+// 3. Helper Components
+// ---------------------------------------------------------
 @Composable
 fun ChatBubble(message: ChatMessage, primaryColor: Color) {
     val align = if (message.isUser) Alignment.End else Alignment.Start
@@ -257,17 +302,26 @@ fun ChatBubble(message: ChatMessage, primaryColor: Color) {
         ) {
             Text(message.text, color = textColor, fontSize = 15.sp, lineHeight = 22.sp)
         }
-        Text(
-            message.timestamp,
-            fontSize = 11.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(top = 4.dp, start = 4.dp, end = 4.dp)
-        )
     }
 }
 
+// ---------------------------------------------------------
+// 4. The Preview (Uses 'Dumb' Component with Fake Data)
+// ---------------------------------------------------------
 @Preview(showBackground = true)
 @Composable
 fun AiChatPreview() {
-    AiChatContent(onDismiss = {})
+    val fakeMessages = listOf(
+        ChatMessage("Hello! How can I help you today?", isUser = false),
+        ChatMessage("I need to fix my AC.", isUser = true),
+        ChatMessage("Sure! I can help you find a technician.", isUser = false)
+    )
+
+    // We pass the fake messages directly to the UI
+    AiChatContent(
+        messages = fakeMessages,
+        isLoading = false,
+        onSendMessage = {}, // Do nothing on send
+        onDismiss = {}
+    )
 }
