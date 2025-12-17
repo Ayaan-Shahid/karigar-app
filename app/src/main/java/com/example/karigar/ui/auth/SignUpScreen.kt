@@ -1,6 +1,7 @@
 package com.example.karigar.ui.auth
 
-// IMPORTS FOR VERSION 1.2.0
+
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
@@ -26,9 +27,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,35 +41,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.karigar.R
+import com.example.karigar.ui.viewmodel.AuthState
+import com.example.karigar.ui.viewmodel.SignUpViewModel
 import com.joelkanyi.jcomposecountrycodepicker.component.KomposeCountryCodePicker
 import com.joelkanyi.jcomposecountrycodepicker.component.rememberKomposeCountryCodePickerState
+
 
 enum class SignupStep { PHONE_INPUT, OTP_VERIFICATION }
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SignupScreen(
-    onVerificationSuccess: (String, String) -> Unit
+    onVerificationSuccess: (String, String) -> Unit,
+    viewModel: SignUpViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val authState by viewModel.authState.collectAsState()
+
     var currentStep by remember { mutableStateOf(SignupStep.PHONE_INPUT) }
     var selectedRole by remember { mutableStateOf(UserRole.CUSTOMER) }
-
-    // Version 1.2.0 uses a State object to handle text and validation
     val pickerState = rememberKomposeCountryCodePickerState("PK")
-
-    // NEW: Local state to hold the raw input (prevents cursor jumping)
     var rawInput by remember { mutableStateOf("") }
 
     val primary = Color(0xFF28A745)
     val textDark = Color(0xFF212121)
     val subtle = Color(0xFF4F4F4F)
+
+    // Observe API Result
+    LaunchedEffect(authState) {
+        when (authState) {
+            is AuthState.Success -> {
+                // Only move to OTP screen when the API confirms success
+                currentStep = SignupStep.OTP_VERIFICATION
+                viewModel.resetState()
+            }
+            is AuthState.Error -> {
+                Toast.makeText(context, (authState as AuthState.Error).message, Toast.LENGTH_LONG).show()
+                viewModel.resetState()
+            }
+            else -> {}
+        }
+    }
 
     AnimatedContent(
         targetState = currentStep,
@@ -80,17 +105,14 @@ fun SignupScreen(
         },
         label = "ScreenTransition"
     ) { step ->
-
         when (step) {
             SignupStep.OTP_VERIFICATION -> {
                 OtpScreen(
-                    phoneNumber = pickerState.phoneNumber,
+                    // Pass the full number with country code to the next screen
+                    phoneNumber = pickerState.getCountryPhoneCodeWithoutPrefix() + pickerState.phoneNumber,
                     userRole = selectedRole,
-                    onVerificationSuccess = { _, _ ->
-                        // Get full number from state
-                        val fullNumber =
-                            pickerState.getCountryPhoneCodeWithoutPrefix() + pickerState.phoneNumber
-                        onVerificationSuccess(selectedRole.name, fullNumber)
+                    onVerificationSuccess = { role, phone ->
+                        onVerificationSuccess(role.name, phone)
                     },
                     onBackClick = { currentStep = SignupStep.PHONE_INPUT }
                 )
@@ -104,8 +126,7 @@ fun SignupScreen(
                         .padding(top = 65.dp, bottom = 45.dp, start = 24.dp, end = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    // Logo Section...
+                    // --- LOGO & WELCOME SECTION ---
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
                             modifier = Modifier
@@ -121,76 +142,40 @@ fun SignupScreen(
                             )
                         }
                         Spacer(modifier = Modifier.height(20.dp))
-                        Text(
-                            "Welcome",
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = textDark
-                        )
-                        Text(
-                            "Create an account to continue",
-                            fontSize = 15.sp,
-                            color = subtle,
-                            textAlign = TextAlign.Center
-                        )
+                        Text("Welcome", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = textDark)
+                        Text("Create an account to continue", fontSize = 15.sp, color = subtle, textAlign = TextAlign.Center)
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Role Selector...
+                    // --- ROLE SELECTOR ---
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            "Select Your Role",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = textDark
-                        )
+                        Text("Select Your Role", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textDark)
                         Spacer(modifier = Modifier.height(10.dp))
                         Row(
                             modifier = Modifier
                                 .width(200.dp)
                                 .height(48.dp)
-                                .background(
-                                    Color(0xFFE0E0E0).copy(alpha = 0.5f),
-                                    RoundedCornerShape(14.dp)
-                                )
+                                .background(Color(0xFFE0E0E0).copy(alpha = 0.5f), RoundedCornerShape(14.dp))
                                 .padding(4.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            RoleOption(
-                                "Customer",
-                                selectedRole == UserRole.CUSTOMER
-                            ) { selectedRole = UserRole.CUSTOMER }
-                            RoleOption(
-                                "Technician",
-                                selectedRole == UserRole.TECHNICIAN
-                            ) { selectedRole = UserRole.TECHNICIAN }
+                            RoleOption("Customer", selectedRole == UserRole.CUSTOMER) { selectedRole = UserRole.CUSTOMER }
+                            RoleOption("Technician", selectedRole == UserRole.TECHNICIAN) { selectedRole = UserRole.TECHNICIAN }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // PHONE INPUT
+                    // --- PHONE INPUT ---
                     Column {
-                        Text(
-                            "Phone Number",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = textDark
-                        )
+                        Text("Phone Number", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = textDark)
                         Spacer(modifier = Modifier.height(8.dp))
 
                         KomposeCountryCodePicker(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
                             state = pickerState,
-
-                            // FIX APPLIED HERE:
-                            // 1. Bind UI to local 'rawInput' so you see what you type immediately
                             text = rawInput,
-
-                            // 2. Update both local variable (for UI) and library state (for validation)
                             onValueChange = { input ->
                                 rawInput = input
                                 pickerState.phoneNumber = input
@@ -200,21 +185,34 @@ fun SignupScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
+                        // --- UPDATED BUTTON WITH LOADING STATE ---
                         Button(
-                            onClick = { currentStep = SignupStep.OTP_VERIFICATION },
-                            enabled = pickerState.isPhoneNumberValid(),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
+                            onClick = {
+                                // Construct full number (e.g., 923137433771)
+                                val fullNumber = pickerState.getCountryPhoneCodeWithoutPrefix() + pickerState.phoneNumber
+                                viewModel.sendOtp(fullNumber)
+                            },
+                            // Disable button if invalid OR if currently loading
+                            enabled = pickerState.isPhoneNumberValid() && authState !is AuthState.Loading,
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = primary,
                                 contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Send Code", fontSize = 17.sp)
+                            if (authState is AuthState.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            } else {
+                                Text("Send Code", fontSize = 17.sp)
+                            }
                         }
                     }
+
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         "By continuing, you agree to our Terms of Service.",

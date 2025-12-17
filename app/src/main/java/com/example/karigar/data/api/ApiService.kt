@@ -3,6 +3,8 @@ package com.example.karigar.data.api
 import com.example.karigar.data.model.ChatRequest
 import com.example.karigar.data.model.ChatResponse
 import com.example.karigar.data.model.JobResponse
+import com.example.karigar.data.model.OtpRequest
+import com.example.karigar.data.model.OtpResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -25,5 +27,8 @@ interface ApiService {
         // The image is optional (nullable)
         @Part image: MultipartBody.Part?
     ): Response<JobResponse>
+
+    @POST("api/v1/auth/request-otp/")
+    suspend fun requestOtp(@Body request: OtpRequest): Response<OtpResponse>
 
 }
