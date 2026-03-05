@@ -26,19 +26,33 @@ import com.example.karigar.ui.viewmodel.PostRequestViewModel
 @Composable
 fun KarigarNavGraph() {
     val navController = rememberNavController()
-
+    // By passing rememberNavController() to navController variable we are creating an instance of class NavHostController.
+    // remember keyword will remember the controllers(instance) history. If we don't write remember then everytime the KarigarNavGraph() fun will be called our app will not remember the backstack, the state and the logic because everytime the func will be called, a new controller will be created.
+    // This instance is the "Brain" of our app. This includes:
+    // (a): The Backstack: A stack having list of every screen the user has visited.
+    // (b): The State: It knows which screen is currently visible to the user.
+    // (c): The Logic: It knows how to move from one screen to the other.
+    // After assigning rememberNavController() the navController variable has become a remote control for our app
     NavHost(
-        navController = navController,
-        startDestination = "onboarding",
+        navController = navController,    // Setting the navController instance that we have previously created
+        startDestination = "onboarding",   // Automatically hows the onboarding screen when the app opens
+
+        // How the new screen arrives.
         enterTransition = {
             slideInHorizontally(initialOffsetX = { 1000 }, animationSpec = tween(400))
         },
+
+        // How the current screen leaves.
         exitTransition = {
             slideOutHorizontally(targetOffsetX = { -1000 }, animationSpec = tween(400))
         },
+
+        // How the previous screen comes back when you press the "Back" button.
         popEnterTransition = {
             slideInHorizontally(initialOffsetX = { -1000 }, animationSpec = tween(400))
         },
+
+        // How the top screen leaves when you press the "Back" button.
         popExitTransition = {
             slideOutHorizontally(targetOffsetX = { 1000 }, animationSpec = tween(400))
         }
