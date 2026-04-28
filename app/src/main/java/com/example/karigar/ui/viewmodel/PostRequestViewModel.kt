@@ -126,11 +126,6 @@ class PostRequestViewModel : ViewModel() {
             }
         }
     }
-
-//    fun resetSubmissionStatus() {
-//        _submissionStatus.value = SubmissionState.Idle
-//    }
-
     // --- Helper Functions ---
 
     private fun createPartFromString(value: String): RequestBody {
